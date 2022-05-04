@@ -2,15 +2,15 @@
 #include <cmath>
 #include <cassert>
 #include <chrono>
-#include <cstring>
+#include <limits>
 
 using namespace std;
 
-#define GB 1073741824
+constexpr int GB = 1073741824;
 void* raw;
 long long reqSize;
 
-int currPower(long long x) //if x is not a power of 2 returns -1
+int currPower(long long x) // if x is not a power of 2 returns -1
 {
 	if (x == 1)
 		return 0;
@@ -25,7 +25,7 @@ int currPower(long long x) //if x is not a power of 2 returns -1
 	return i;
 }
 
-long long nextPower(const long long x) //if x is a power of 2 returns x
+long long nextPower(const long long x) // if x is a power of 2 returns x
 {
 	long long value = 1;
 	while (value < x)
@@ -71,25 +71,25 @@ struct Block
 	Block* prev;
 };
 
-#define maxBlockSize 512
-#define minBlockSize 32
-#define maxLevel 9
-#define minLevel 5
-#define splitMetaBytesPower maxLevel - minLevel - 3
-#define freeMetaBytesPower maxLevel - minLevel + 1 - 3
-#define unusableSize maxBlockSize - reqSize
-#define numOfMinBlocksForUnusable (unusableSize / minBlockSize) + 1
-#define splitMetaInBits (1 << splitMetaBytesPower) * 8
-#define freeMetaInBits (1 << freeMetaBytesPower) * 8
-#define metaSizeInBytes (1 << splitMetaBytesPower) + (1 << freeMetaBytesPower)
-#define metaSizeInBits metaSizeInBytes * 8
-#define initSize unusableSize + metaSizeInBytes + (maxLevel - minLevel + 1) * 8
-#define numOfMinBlocksForMeta (metaSizeInBytes / minBlockSize) + 1
-#define numOfMinBlocksForInit ceil((double)initSize / (double)minBlockSize)
-#define h maxLevel - minLevel + 1
-#define metaStart (unsigned char*)raw
-#define ptrsStart (unsigned char*)raw + metaSizeInBytes
-#define freeStart (unsigned char*)metaStart + (1 << splitMetaBytesPower)
+constexpr int maxBlockSize = 512;
+constexpr int minBlockSize = 32;
+constexpr int maxLevel = 9;
+constexpr int minLevel = 5;
+constexpr int splitMetaBytesPower = maxLevel - minLevel - 3;
+constexpr int freeMetaBytesPower = maxLevel - minLevel + 1 - 3;
+#define unusableSize maxBlockSize - reqSize;
+#define numOfMinBlocksForUnusable = (unusableSize / minBlockSize) + 1;
+constexpr int splitMetaInBits = (1 << splitMetaBytesPower) * 8;
+constexpr int freeMetaInBits = (1 << freeMetaBytesPower) * 8;
+constexpr int metaSizeInBytes = (1 << splitMetaBytesPower) + (1 << freeMetaBytesPower);
+constexpr int metaSizeInBits = metaSizeInBytes * 8;
+#define initSize = unusableSize + metaSizeInBytes + (maxLevel - minLevel + 1) * 8;
+constexpr int numOfMinBlocksForMeta = (metaSizeInBytes / minBlockSize) + 1;
+#define numOfMinBlocksForInit = ceil((double)initSize / (double)minBlockSize);
+constexpr int h = maxLevel - minLevel + 1;
+#define metaStart (unsigned char*)raw;
+#define ptrsStart (unsigned char*)raw + metaSizeInBytes;
+#define freeStart (unsigned char*)metaStart + (1 << splitMetaBytesPower);
 
 class Allocator
 {
@@ -169,12 +169,12 @@ public:
 
 	static void setSplit(const int i)
 	{
-		static_cast<unsigned char*>(metaStart)[i / __CHAR_BIT__] |= (1 << (i % __CHAR_BIT__));
+		static_cast<unsigned char*>(metaStart)[i / CHAR_BIT] |= (1 << (i % CHAR_BIT));
 	}
 
 	static void*& freeLists(const int i)
 	{
-		return *reinterpret_cast<void**>((unsigned char*)ptrsStart + i * __CHAR_BIT__);
+		return *reinterpret_cast<void**>((unsigned char*)ptrsStart + i * CHAR_BIT);
 	}
 
 	static void setFreeLists(const int i, void* ptr)
@@ -184,26 +184,26 @@ public:
 
 	static void toggleSplit(const int i)
 	{
-		static_cast<unsigned char*>(metaStart)[i / __CHAR_BIT__] ^= (1 << (i % __CHAR_BIT__));
+		static_cast<unsigned char*>(metaStart)[i / CHAR_BIT] ^= (1 << (i % CHAR_BIT));
 	}
 
 	static void toggleFree(const int i)
 	{
-		((unsigned char*)freeStart)[i / __CHAR_BIT__] ^= (1 << (i % __CHAR_BIT__));
+		((unsigned char*)freeStart)[i / CHAR_BIT] ^= (1 << (i % CHAR_BIT));
 	}
 
 	static bool isSplit(const int i)
 	{
 		auto* cptr = static_cast<unsigned char*>(metaStart);
-		const auto byte = cptr[i / __CHAR_BIT__];
-		return byte & (1 << (i % __CHAR_BIT__));
+		const auto byte = cptr[i / CHAR_BIT];
+		return byte & (1 << (i % CHAR_BIT));
 	}
 
 	static bool isFree(const int i)
 	{
 		auto* cptr = static_cast<unsigned char*>(freeStart);
-		const auto byte = cptr[i / __CHAR_BIT__];
-		return !(byte & (1 << (i % __CHAR_BIT__)));
+		const auto byte = cptr[i / CHAR_BIT];
+		return !(byte & (1 << (i % CHAR_BIT)));
 	}
 
 	Block* getBlock(const size_t size) const
