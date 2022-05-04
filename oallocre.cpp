@@ -1,14 +1,13 @@
 #include <iostream>
 #include <cmath>
-#include <cassert>
 #include <chrono>
-#include <limits>
+#include <climits>
 
 using namespace std;
 
-constexpr int GB = 1073741824;
+constexpr unsigned long long GB = 1073741824;
 void* raw;
-long long reqSize;
+unsigned long long reqSize;
 
 int currPower(long long x) // if x is not a power of 2 returns -1
 {
@@ -77,19 +76,19 @@ constexpr int maxLevel = 9;
 constexpr int minLevel = 5;
 constexpr int splitMetaBytesPower = maxLevel - minLevel - 3;
 constexpr int freeMetaBytesPower = maxLevel - minLevel + 1 - 3;
-#define unusableSize maxBlockSize - reqSize;
+#define unusableSize (maxBlockSize - reqSize)
 #define numOfMinBlocksForUnusable = (unusableSize / minBlockSize) + 1;
 constexpr int splitMetaInBits = (1 << splitMetaBytesPower) * 8;
 constexpr int freeMetaInBits = (1 << freeMetaBytesPower) * 8;
 constexpr int metaSizeInBytes = (1 << splitMetaBytesPower) + (1 << freeMetaBytesPower);
 constexpr int metaSizeInBits = metaSizeInBytes * 8;
-#define initSize = unusableSize + metaSizeInBytes + (maxLevel - minLevel + 1) * 8;
+#define initSize (unusableSize + metaSizeInBytes + (maxLevel - minLevel + 1) * 8)
 constexpr int numOfMinBlocksForMeta = (metaSizeInBytes / minBlockSize) + 1;
 #define numOfMinBlocksForInit = ceil((double)initSize / (double)minBlockSize);
 constexpr int h = maxLevel - minLevel + 1;
-#define metaStart (unsigned char*)raw;
-#define ptrsStart (unsigned char*)raw + metaSizeInBytes;
-#define freeStart (unsigned char*)metaStart + (1 << splitMetaBytesPower);
+#define metaStart (unsigned char*)raw
+#define ptrsStart ((unsigned char*)raw + metaSizeInBytes)
+#define freeStart ((unsigned char*)metaStart + (1 << splitMetaBytesPower))
 
 class Allocator
 {
@@ -98,9 +97,6 @@ public:
 	{
 		init();
 	}
-
-	Allocator(int test)
-	{}
 
 	void init()
 	{
@@ -331,9 +327,8 @@ public:
 
 int main()
 {
-	reqSize = 500;
+	reqSize = 2*GB;
 	raw = calloc(1, reqSize);
-
 	auto start = chrono::high_resolution_clock::now();
 	auto end = chrono::high_resolution_clock::now();
 	start = chrono::high_resolution_clock::now();
@@ -344,15 +339,15 @@ int main()
 	cout << duration.count() << endl;
 
 	Allocator a;
-	/*for (auto i = 0; i < 16; ++i)
+	for (auto i = 0; i < 16; ++i)
 	{
 		cout << boolalpha << i << ' ' << a.isSplit(i) << endl;
-	}*/
+	}
 	//puts("-------------------------");
-	/*for (auto i = 0; i < 32; ++i)
+	for (auto i = 0; i < 32; ++i)
 	{
 		cout << boolalpha << i << ' ' << a.isFree(i) << endl;
-	}*/
+	}
 	//a.allocate(32);
 	start = chrono::high_resolution_clock::now();
 	auto* p1 = a.allocate(32);
@@ -362,6 +357,5 @@ int main()
 	cout << duration.count() << endl;
 	//a.deallocate(p);
 	free(raw);
-
 	return 0;
 }
